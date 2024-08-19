@@ -1,61 +1,52 @@
 // import { createAction, createReducer } from '@reduxjs/toolkit'
 import { createSlice } from '@reduxjs/toolkit'
+import { apiCallBegan } from '../middlewares/api';
 
 let lastId = 0;
 
 const slice = createSlice({
     name: 'bugs',
-    initialState: [],
+    initialState: {
+        list: [],
+        loading: false,
+        lastFetch: null,
+    },
     reducers: {
+        bugsReceived: (bugs, action) => {
+            bugs.list = action.payload;
+        },
         bugAdded: (bugs, action) => {
-            bugs.push({
+            bugs.list.push({
                 id: ++lastId,
                 description: action.payload.description,
                 resolved: false,
             })
         },
         bugRemoved: (bugs, action) => {
-            bugs.filter(bug => bug.id !== action.payload.id)
+            bugs.list.filter(bug => bug.id !== action.payload.id)
         },
         bugResolved: (bugs, action) => {
-            const index = bugs.findIndex((bug) => bug.id === action.payload.id);
-            bugs[index].resolved = true
+            const index = bugs.list.findIndex((bug) => bug.id === action.payload.id);
+            bugs.list[index].resolved = true
         },
         bugAssignedToUser: (bugs, action) => {
             const { bugId, userId } = action.payload;
-            const index = bugs.findIndex((bug) => bug.id === bugId);
-            bugs[index].userId = userId;
+            const index = bugs.list.findIndex((bug) => bug.id === bugId);
+            bugs.list[index].userId = userId;
         },
     }
 })
 
-export const { bugAdded, bugRemoved, bugResolved,bugAssignedToUser } = slice.actions;
+const url = '/bugs';
+export const loadBugs = () =>
+  apiCallBegan({
+    url,
+    onSuccess: bugsReceived.type,
+  });
+
+export const { bugAdded, bugRemoved, bugResolved, bugAssignedToUser, bugsReceived } = slice.actions;
 export default slice.reducer;
 
-export const getUnresolvedBugs = (bugs) => bugs.filter((bug) => !bug.resolved)
+export const getUnresolvedBugs = (bugs) => bugs.list.filter((bug) => !bug.resolved)
 
-export const getBugsbyUser = (userId) => (bugs) => bugs.filter((bug) => bug.userId === userId)
-
-// Old Actions
-// export const bugAdded = createAction('bugAdded')
-// export const bugRemoved = createAction('bugRemoved')
-// export const bugResolved = createAction('bugResolved')
-
-// Old Reducer
-// export const reducer = createReducer([], (builder) => {
-//     builder
-//         .addCase(bugAdded, (bugs, action) => {
-//             bugs.push({
-//                 id: ++lastId,
-//                 description: action.payload.description,
-//                 resolved: false,
-//             })
-//         })
-//         .addCase(bugRemoved, (bugs, action) => {
-//             bugs.filter(bug => bug.id !== action.payload.id)
-//         })
-//         .addCase(bugResolved, (bugs, action) => {
-//             const index = bugs.findIndex((bug) => bug.id === action.payload.id);
-//             bugs[index].resolved = true
-//         })
-// })
+export const getBugsbyUser = (userId) => (bugs) => bugs.list.filter((bug) => bug.userId === userId)
