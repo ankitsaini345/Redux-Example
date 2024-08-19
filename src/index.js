@@ -1,8 +1,8 @@
-import { bugAdded, bugRemoved, bugResolved } from './actions';
-import store from './store';
+import { bugAdded, bugRemoved, bugResolved } from './store/bugs';
+import store from './store/configureStore';
 
 const unsubscribe = store.subscribe(() => {
-  console.log('Store changed!', store.getState());
+    console.log('Store changed!', store.getState());
 });
 
 store.dispatch(bugAdded('Bug1'))
